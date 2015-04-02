@@ -42,12 +42,12 @@ FROM "bgbVoyage";
 -- Converting places to points
 
 UPDATE "voyagePoints"
-SET "voyDepartureCoord" = ST_SetSRID(ST_MakePoint(geo.lat, geo.lng),4326)
+SET "voyDepartureCoord" = ST_SetSRID(ST_MakePoint(geo.lng, geo.lat),4326)
 FROM "bgbPlaceGeo" geo
 WHERE "voyDepartureId" = geo.id; 
 
 UPDATE "voyagePoints"
-SET "voyArrivalCoord" = ST_SetSRID(ST_MakePoint(geo.lat, geo.lng),4326)
+SET "voyArrivalCoord" = ST_SetSRID(ST_MakePoint(geo.lng, geo.lat),4326)
 FROM "bgbPlaceGeo" geo
 WHERE "voyArrivalId" = geo.id;
 
@@ -58,9 +58,9 @@ SET "route" = ST_SetSRID(ST_MakeLine("voyDepartureCoord", "voyArrivalCoord"),432
 
 -- Loop function
 
-DROP TABLE "allVoyagePoints";
-CREATE TABLE "allVoyagePoints" (
-	"id" SERIAL PRIMARY KEY,
+DROP TABLE "allvoyagepoints";
+CREATE TABLE "allvoyagepoints" (
+	"cartodb_id" SERIAL PRIMARY KEY,
 	"voyId" integer,
 	"the_geom" geometry(POINT,4326),
 	"the_geom_webmercator" geometry(POINT,3857),
@@ -72,17 +72,17 @@ CREATE OR REPLACE FUNCTION insertPoints(integer, geometry, timestamp, timestamp)
 $$
 DECLARE
    	iterator 	float 	:= 1; 
-   	steps    	float	:= round(((ST_Length_Spheroid($2,'SPHEROID["WGS 84",6378137,298.257223563]'))/1000)/100); -- iedere xx km een stap
-   	speed		integer	:= 10; -- km/h
+   	steps    	float	:= round(((ST_Length_Spheroid($2,'SPHEROID["WGS 84",6378137,298.257223563]'))/1000)/5); -- iedere xx km een stap
+   	speed		integer	:= 3; -- km/h
 	increment	float 	:= 0;
 
 BEGIN
    	WHILE iterator < steps
    	LOOP
 		increment := iterator*((((ST_Length_Spheroid($2,'SPHEROID["WGS 84",6378137,298.257223563]'))/1000)/speed)/steps);
-		RAISE NOTICE 'check %', steps;
+		-- RAISE NOTICE 'check %', steps;
 
-      	INSERT INTO "allVoyagePoints" (
+      	INSERT INTO "allvoyagepoints" (
       		"voyId",
       		"the_geom",
       		"date"
@@ -111,4 +111,7 @@ $$ LANGUAGE 'plpgsql' ;
 -- Run function
 SELECT 
 	insertPoints("voyId", "route", "voyDepTimeStamp", "voyArrTimeStamp")
-FROM "voyagePoints";
+FROM "voyagePoints"
+WHERE "voyDepTimeStamp" > '1000-10-10' OR "voyArrTimeStamp" > '1000-10-10';
+
+

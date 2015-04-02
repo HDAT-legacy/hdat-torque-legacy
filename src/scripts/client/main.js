@@ -6,7 +6,7 @@ var CARTOCSS = [
     '-torque-time-attribute: "date";',
     '-torque-aggregation-function: "count(cartodb_id)";',
     '-torque-frame-count: 8000;',
-    '-torque-animation-duration: 1800;',
+    '-torque-animation-duration: 1500;',
     '-torque-resolution: 2',
     '}',
     '#layer {',
@@ -44,15 +44,15 @@ L.tileLayer('images/tiles/{z}/{x}/{y}.png', {
 }).addTo(map);
 var torqueLayer = new L.TorqueLayer({
       provider: 'sql_api',
-      user       : 'ervazu',
-      table      : 'cliwocreformat',
-      column     : 'timestamp',
-      countby    : 'count(id)',
+      url: 'http://127.0.0.1:8080/api/v2/sql',
+      tiler_domain: 'localhost',
+      tiler_port: '4000',
+      table      : 'allVoyagePoints',
+      column     : 'date',
+      countby    : 'count(cartodb_id)',
       loop       : true,
       resolution: 1,
-      steps: 9600,
       blendmode  : 'multiply',
-      animationDuration: 800,
       map: map,
       cartocss: CARTOCSS
 });
